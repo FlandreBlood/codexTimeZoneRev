@@ -36,10 +36,5 @@ codex-timezone
 - [登录复用说明](docs/Linux登录状态修复.md)
 - [安全审计](docs/安全审计与运行边界.md)
 
-## 制作者
-
-- 原作者：[iUshio](https://github.com/iUshio)
-- Linux 适配与维护：[FlandreBlood](https://github.com/FlandreBlood)
-- AI 辅助开发：Codex（OpenAI）
 
 项目沿用上游 [LICENSE](LICENSE)。
