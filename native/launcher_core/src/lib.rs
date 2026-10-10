@@ -9,6 +9,9 @@ mod common;
 #[cfg(target_os = "macos")]
 #[path = "platform/mac/mod.rs"]
 mod macos;
+#[cfg(target_os = "linux")]
+#[path = "platform/linux/mod.rs"]
+mod linux;
 #[cfg(windows)]
 #[path = "platform/win/mod.rs"]
 mod windows;
@@ -46,7 +49,9 @@ fn dispatch(request: &str) -> Result<Value, String> {
     { windows::execute(&request.command, request.payload) }
     #[cfg(target_os = "macos")]
     { macos::execute(&request.command, request.payload) }
-    #[cfg(not(any(windows, target_os = "macos")))]
+    #[cfg(target_os = "linux")]
+    { linux::execute(&request.command, request.payload) }
+    #[cfg(not(any(windows, target_os = "macos", target_os = "linux")))]
     { Err("仅支持 Windows 和 macOS。".into()) }
 }
 

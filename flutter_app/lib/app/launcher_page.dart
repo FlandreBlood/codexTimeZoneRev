@@ -141,48 +141,50 @@ class LauncherPage extends StatelessWidget {
           color: context.theme.colors.mutedForeground,
         ),
       ),
-      const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
-        child: FDivider(),
-      ),
-      FSwitch(
-        label: const Text('Dream Skin 兼容启动'),
-        description: const Text('保存后，在下次启动时应用皮肤。'),
-        value: settings.dreamSkinCompatible,
-        enabled: launcher.editable,
-        onChange: (value) =>
-            launcher.update(settings.copyWith(dreamSkinCompatible: value)),
-      ),
-      const SizedBox(height: 16),
-      Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: [
-          FButton(
-            mainAxisSize: MainAxisSize.min,
-            variant: FButtonVariant.outline,
-            onPress: launcher.editable && !launcher.preview
-                ? () => launcher.action('launch_dream_skin')
-                : null,
-            child: const Text('打开 Dream Skin'),
-          ),
-          FButton(
-            mainAxisSize: MainAxisSize.min,
-            variant: FButtonVariant.outline,
-            onPress: launcher.editable && !launcher.preview
-                ? () => launcher.action('reapply_dream_skin')
-                : null,
-            child: const Text('重新注入皮肤'),
-          ),
-        ],
-      ),
-      const SizedBox(height: 8),
-      Text(
-        '重新注入需要客户端由兼容启动打开；不会重启客户端或更改时区。',
-        style: context.theme.typography.body.sm.copyWith(
-          color: context.theme.colors.mutedForeground,
+      if (launcher.platform != 'linux') ...[
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 24),
+          child: FDivider(),
         ),
-      ),
+        FSwitch(
+          label: const Text('Dream Skin 兼容启动'),
+          description: const Text('保存后，在下次启动时应用皮肤。'),
+          value: settings.dreamSkinCompatible,
+          enabled: launcher.editable,
+          onChange: (value) =>
+              launcher.update(settings.copyWith(dreamSkinCompatible: value)),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            FButton(
+              mainAxisSize: MainAxisSize.min,
+              variant: FButtonVariant.outline,
+              onPress: launcher.editable && !launcher.preview
+                  ? () => launcher.action('launch_dream_skin')
+                  : null,
+              child: const Text('打开 Dream Skin'),
+            ),
+            FButton(
+              mainAxisSize: MainAxisSize.min,
+              variant: FButtonVariant.outline,
+              onPress: launcher.editable && !launcher.preview
+                  ? () => launcher.action('reapply_dream_skin')
+                  : null,
+              child: const Text('重新注入皮肤'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '重新注入需要客户端由兼容启动打开；不会重启客户端或更改时区。',
+          style: context.theme.typography.body.sm.copyWith(
+            color: context.theme.colors.mutedForeground,
+          ),
+        ),
+      ],
     ]);
 
     return FScaffold(

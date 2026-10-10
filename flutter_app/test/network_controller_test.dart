@@ -20,6 +20,24 @@ class FakeTransport implements NetworkTransport {
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+  test(
+    'manual-only startup opens no network transport but refresh still works',
+    () async {
+      var opened = 0;
+      final controller = NetworkController(
+        autoRefresh: false,
+        transportFactory: () {
+          opened++;
+          return FakeTransport((_) async => throw StateError('offline'));
+        },
+      );
+      addTearDown(controller.dispose);
+      await controller.initialize();
+      expect(opened, 0);
+      await controller.refresh();
+      expect(opened, 9);
+    },
+  );
   test('one region succeeds despite failure of all other region providers', () async {
     final transports = <FakeTransport>[];
     final controller = NetworkController(

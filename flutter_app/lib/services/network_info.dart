@@ -117,10 +117,12 @@ Future<T> firstSuccess<T>(List<Future<T>> requests) {
 class NetworkController extends ChangeNotifier {
   NetworkController({
     this.preview = false,
+    this.autoRefresh = true,
     TransportFactory? transportFactory,
     this.requestTimeout = const Duration(seconds: 9),
   }) : _transportFactory = transportFactory ?? desktopTransport;
   final bool preview;
+  final bool autoRefresh;
   final TransportFactory _transportFactory;
   final Duration requestTimeout;
   IpInfo? domestic, international;
@@ -169,7 +171,7 @@ class NetworkController extends ChangeNotifier {
     } catch (_) {
       /* Corrupt optional cache must never block startup. */
     }
-    if (!_disposed) await refresh();
+    if (!_disposed && autoRefresh) await refresh();
   }
 
   Future<String> _get(NetworkTransport client, String url) {

@@ -37,14 +37,60 @@ final _proxyResolver = SystemProxyResolver();
 NetworkTransport desktopTransport() {
   if (Platform.isMacOS) return MacNetworkTransport();
   if (Platform.isWindows) return ProxyHttpTransport(_proxyResolver.resolve);
-  throw UnsupportedError('仅支持 Windows 和 macOS。');
+  if (Platform.isLinux) {
+    return ProxyHttpTransport(
+      (uri) async => linuxProxyForUrl(uri),
+      requireHttps: true,
+    );
+  }
+  throw UnsupportedError('仅支持 Windows、macOS 和 Linux。');
+}
+
+/// Linux uses explicit process proxy variables; unsupported proxies never fall
+/// back silently to a direct connection. Do not include proxy values in errors.
+String linuxProxyForUrl(Uri uri, {Map<String, String>? environment}) {
+  final env = environment ?? Platform.environment;
+  final bypass = env['no_proxy'] ?? env['NO_PROXY'] ?? '';
+  for (var entry in bypass.split(',')) {
+    entry = entry.trim().toLowerCase();
+    if (entry == '*') return 'DIRECT';
+    if (entry.isEmpty) continue;
+    final host = uri.host.toLowerCase();
+    final domain = entry.startsWith('.') ? entry.substring(1) : entry;
+    if (host == domain || host.endsWith('.$domain')) return 'DIRECT';
+  }
+  final scheme = uri.scheme.toLowerCase();
+  final raw =
+      env['${scheme}_proxy'] ??
+      env['${scheme.toUpperCase()}_PROXY'] ??
+      env['all_proxy'] ??
+      env['ALL_PROXY'];
+  if (raw == null || raw.trim().isEmpty) return 'DIRECT';
+  final text = raw.trim();
+  final proxy = Uri.tryParse(text.contains('://') ? text : 'http://$text');
+  if (proxy == null ||
+      proxy.scheme != 'http' ||
+      proxy.host.isEmpty ||
+      proxy.userInfo.isNotEmpty ||
+      (proxy.path.isNotEmpty && proxy.path != '/') ||
+      proxy.hasQuery ||
+      proxy.hasFragment ||
+      proxy.port < 1 ||
+      proxy.port > 65535) {
+    throw StateError(
+      'Linux 网络查询仅支持无认证 HTTP 代理；请检查 HTTP_PROXY / HTTPS_PROXY / ALL_PROXY。',
+    );
+  }
+  final host = proxy.host.contains(':') ? '[${proxy.host}]' : proxy.host;
+  return 'PROXY $host:${proxy.port}';
 }
 
 /// The proxy is resolved for every destination, including redirect targets.
 /// One instance belongs to one provider race and is closed on cancellation.
 class ProxyHttpTransport implements NetworkTransport {
-  ProxyHttpTransport(this.lookup);
+  ProxyHttpTransport(this.lookup, {this.requireHttps = false});
   final ProxyLookup lookup;
+  final bool requireHttps;
   final HttpClient _client = HttpClient();
   bool _closed = false;
 
@@ -52,7 +98,9 @@ class ProxyHttpTransport implements NetworkTransport {
   Future<String> get(Uri uri) async {
     for (var redirects = 0; redirects <= 5; redirects++) {
       if (_closed) throw StateError('网络请求已取消。');
-      if (!['http', 'https'].contains(uri.scheme) ||
+      if (!(requireHttps ? ['https'] : ['http', 'https']).contains(
+            uri.scheme,
+          ) ||
           uri.host.isEmpty ||
           uri.userInfo.isNotEmpty) {
         throw const FormatException('仅支持不含认证信息的 HTTP(S) URL');
@@ -69,23 +117,27 @@ class ProxyHttpTransport implements NetworkTransport {
         if (location == null || redirects == 5) {
           throw const HttpException('无效或过多的网络重定向');
         }
-        await response.drain<void>();
+        await _readLimited(response);
         uri = uri.resolve(location);
         continue;
       }
       if (response.statusCode != 200) {
         throw HttpException('HTTP ${response.statusCode}');
       }
-      final bytes = <int>[];
-      await for (final chunk in response) {
-        if (bytes.length + chunk.length > 1024 * 1024) {
-          throw const HttpException('网络响应过大');
-        }
-        bytes.addAll(chunk);
-      }
-      return utf8.decode(bytes);
+      return utf8.decode(await _readLimited(response));
     }
     throw const HttpException('过多的网络重定向');
+  }
+
+  Future<List<int>> _readLimited(HttpClientResponse response) async {
+    final bytes = <int>[];
+    await for (final chunk in response) {
+      if (bytes.length + chunk.length > 1024 * 1024) {
+        throw const HttpException('网络响应过大');
+      }
+      bytes.addAll(chunk);
+    }
+    return bytes;
   }
 
   @override

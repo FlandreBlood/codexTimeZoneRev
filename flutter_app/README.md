@@ -1,6 +1,6 @@
 # Flutter + Forui 桌面应用
 
-本程序由 Codex 开发。此目录包含桌面界面、Windows/macOS runner 与 Dart 测试；Rust 后端位于 `../native/launcher_core/`。
+本程序由 Codex 开发。此目录包含桌面界面、Windows/macOS/Linux runner 与 Dart 测试；Rust 后端位于 `../native/launcher_core/`。
 
 ## 环境
 
@@ -37,6 +37,8 @@ bash scripts/flutter-macos.sh build
 脚本将 Rust 原生库复制进应用并对本地构建进行临时签名，ZIP 位于 `environment/artifacts/`。已在 Apple Silicon Mac 上完成构建、签名检查和 Dream Skin 重新注入验证；Developer ID 签名、公证及其他机器上的回归仍待完成。当前没有通用二进制包承诺。
 
 ## 配置与限制
+
+Linux 本机运行与构建见 [Linux 运行说明](../docs/Linux运行说明.md)。Linux 使用独立 `.so` 和 XDG 配置目录；默认不自动公网查询、不提供皮肤及管理员修复。应用菜单入口替代 Windows/macOS 桌面快捷方式。
 
 - Windows 配置在程序旁的 `data/settings.json`；macOS 配置在应用支持目录。旧版配置格式由原生后端兼容读取。
 - Flutter 的主题偏好和网络缓存独立保存；旧 WebView 的主题与缓存不会自动迁移。

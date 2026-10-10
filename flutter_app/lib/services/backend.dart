@@ -35,7 +35,9 @@ Map<String, dynamic> _invoke(String request) {
   final override = Platform.environment['CODEX_TZ_NATIVE_LIBRARY'];
   final path =
       override ??
-      (Platform.isWindows
+      (Platform.isLinux
+          ? p.join(executableDirectory, 'lib', 'libcodex_timezone_core.so')
+          : Platform.isWindows
           ? p.join(executableDirectory, 'codex_timezone_core.dll')
           : p.normalize(
               p.join(
@@ -100,8 +102,16 @@ class PreviewBackend implements LauncherBackend {
         {'id': 'Asia/Kolkata', 'label': '印度标准时间'},
         {'id': 'Asia/Kathmandu', 'label': '尼泊尔时间'},
       ],
-      'detected': r'C:\Program Files\Codex\Codex.exe（演示）',
-      'platform': Platform.isMacOS ? 'macos' : 'windows',
+      'detected': Platform.isLinux
+          ? '/usr/lib/chatgpt/ChatGPT（演示）'
+          : Platform.isMacOS
+          ? '/Applications/Codex.app（演示）'
+          : r'C:\Program Files\Codex\Codex.exe（演示）',
+      'platform': Platform.isLinux
+          ? 'linux'
+          : Platform.isMacOS
+          ? 'macos'
+          : 'windows',
     };
   }
 }

@@ -9,6 +9,8 @@ permissions:
 
 jobs:
   desktop:
+    # This fork publishes Linux locally; preserve upstream desktop jobs only upstream.
+    if: github.repository == 'iUshio/codexTimeZoneRev'
     strategy:
       fail-fast: false
       matrix:

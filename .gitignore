@@ -8,6 +8,8 @@ data/
 # 依赖、构建目录与本地缓存
 environment/
 native/**/target/
+__pycache__/
+*.pyc
 
 # 开发过程文件
 开发日志.md
@@ -20,7 +22,6 @@ Thumbs.db
 .DS_Store
 
 # UI 审查期间生成的本地源码备份和截图运行缓存
-docs/
 docs/ui-review/source-backup-*/
 docs/ui-review/.screenshot-profile/
 

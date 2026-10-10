@@ -17,6 +17,8 @@ class SystemDesktopServices implements DesktopServices {
                 label: 'Codex 桌面客户端',
                 uniformTypeIdentifiers: ['com.apple.application-bundle'],
               )
+            : platform == 'linux'
+            ? const XTypeGroup(label: 'Codex 桌面可执行程序')
             : const XTypeGroup(label: 'Codex 桌面客户端', extensions: ['exe']),
       ],
     );

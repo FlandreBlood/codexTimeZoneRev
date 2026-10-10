@@ -29,7 +29,12 @@ class Backend implements LauncherBackend {
     Map<String, dynamic> payload = const {},
   ]) async {
     calls.add(command);
-    if (command == 'bootstrap') return const PreviewBackend().call(command);
+    if (command == 'bootstrap') {
+      return {
+        ...await const PreviewBackend().call(command),
+        'platform': 'windows',
+      };
+    }
     if (command == 'validate') return {'path': payload['path']};
     if (command == 'launch' && repairRequired) {
       return {

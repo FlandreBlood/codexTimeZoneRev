@@ -1,20 +1,36 @@
-# Codex 时区启动器
+# Codex 时区启动器 · Linux 版 v0.1
 
-**本程序由 Codex 开发。** 这是独立的开源桌面项目，并非 OpenAI 官方应用。
+这是 [iUshio/codexTimeZoneRev](https://github.com/iUshio/codexTimeZoneRev) 的 **Linux 适配 fork**，使用 Flutter、Forui 和 Rust。上游版本基线为 `v0.2.1`，本 fork 的 Linux 版本独立从 **v0.1** 开始。项目并非 OpenAI 官方应用，保留上游作者与 [LICENSE](LICENSE)。
 
-这是一个使用 Flutter、Forui 和 Rust 构建的 Windows/macOS 启动器。它为新启动的客户端进程设置指定时区，不修改操作系统的全局时区；已经运行的客户端不会因修改设置而自动切换时区。
+本版已在 Ubuntu/KDE x86_64 实测运行，用户确认原 Codex 登录状态复用成功。它为新启动的客户端设置指定时区，不修改系统时区；已有客户端须完全退出后重新启动。Linux 不提供皮肤功能。
 
 ## 主要功能
 
 - 选择 120 个常用 IANA 地区时区（含夏令时规则）或 UTC−12 至 UTC+14 的固定偏移，预览本地与目标时间。地区清单重点覆盖美国、亚洲和欧洲，可按城市名称或 IANA 标识搜索；美国包含主要时区及亚利桑那、阿拉斯加、阿留申群岛、夏威夷等特殊地区。
-- 自动发现或手动选择客户端，保存配置、检查启动条件并创建桌面快捷方式。
+- 自动发现或手动选择客户端，保存配置、检查启动条件并创建快捷方式（Linux 为应用菜单入口）。
 - 查询双线路公网信息、缓存结果、复制 IP，并将可识别的时区用于设置草稿。公网查询会连接第三方服务。
-- 支持 Dream Skin 兼容启动、打开管理器和“重新注入皮肤”。重新注入需要当前客户端通过兼容模式启动并开放本机调试端口；此操作不会重启客户端或改变其时区。
+- Windows/macOS 支持 Dream Skin 兼容启动、打开管理器和“重新注入皮肤”；Linux 省略此功能。重新注入需要当前客户端通过兼容模式启动并开放本机调试端口；此操作不会重启客户端或改变其时区。
 - 读取旧版 `settings.json`；用户配置保存在本机，发布包不包含本机设置或日志。
 
 ## 下载与运行
 
-在 [GitHub Releases](https://github.com/iUshio/codexTimeZoneRev/releases) 下载对应平台的 ZIP。Windows 解压后运行 `codex_timezone.exe`，并保留同目录的 DLL 和 `data` 资源。macOS 解压后运行应用；当前 macOS 包仅使用临时签名，尚未完成 Developer ID 签名与公证，系统可能要求用户手动确认打开。
+### Linux v0.1 下载
+
+从本 fork 的 [v0.1 Release](https://github.com/FlandreBlood/codexTimeZoneRev/releases/tag/v0.1) 下载 **`CodexTimeZone-Linux-amd64-v0.1.deb`** 和 `SHA256SUMS`，放在同一目录：
+
+```bash
+sha256sum --ignore-missing -c SHA256SUMS
+sudo apt install ./CodexTimeZone-Linux-amd64-v0.1.deb
+codex-timezone
+```
+
+安装后在应用菜单搜索 **Codex 时区启动器 (Linux)**，或运行 `codex-timezone`；关闭后用同一入口重开。卸载使用 `sudo apt remove codex-timezone`，用户设置保留。Release 另外提供无需安装的 tar.gz 包。
+
+发布包附带本次构建使用的运行库，不需要原机器的 conda 目录；要求 **Linux x86_64、glibc ≥ 2.39**、系统图形驱动和正常桌面/D-Bus 会话，不承诺所有发行版兼容。已安装的 Codex/ChatGPT 客户端需自行提供。详见 [v0.1 发布与使用说明](docs/Linux-v0.1发布说明.md)。
+
+Linux 复用原 Codex 实际生效的桌面入口，沿用代理、参数、工作目录和用户数据设置，不创建独立 profile；缺失的桌面会话变量会补齐。用户已确认登录复用修复实测成功，详见 [登录状态修复记录](docs/Linux登录状态修复.md)。
+
+本 fork 的 Release 发布 Linux 包。Windows/macOS 下载与说明请参考 [上游项目](https://github.com/iUshio/codexTimeZoneRev)。本机源码构建与诊断见 [Linux 运行说明](docs/Linux运行说明.md)，风险与边界见 [安全审计](docs/安全审计与运行边界.md)。
 
 ### Windows 启动排错
 
@@ -31,6 +47,18 @@
 ## 从源码构建
 
 需要 Flutter 3.47.5（Dart 3.13.4）、Rust stable。Windows 还需要 Visual Studio C++ 桌面工具链；macOS 需要完整 Xcode。将 Flutter 的 `bin` 与 Cargo 加入 `PATH`，或在 Windows 传入 `-FlutterSdk`。
+
+```bash
+# Linux：安装 GTK 3 开发库、clang、CMake、Ninja、pkg-config 后
+bash scripts/flutter-linux.sh test
+bash scripts/flutter-linux.sh build
+python scripts/test-native-linux.py
+bash scripts/run-linux.sh
+# 可选：制作包含运行库的 Linux 发布包，需要 Python 和 patchelf
+python scripts/package-linux-release.py --version v0.1
+# 检查 deb/tar.gz 元数据、文件摘要、解压运行库及测试窗口
+python scripts/test-linux-release.py --gui
+```
 
 ```powershell
 # Windows：在仓库根目录运行
@@ -49,7 +77,7 @@ bash scripts/flutter-macos.sh test
 bash scripts/flutter-macos.sh build
 ```
 
-构建产物位于 `environment/artifacts/`。发布版的 Windows/macOS 云端构建仅由 GitHub Release 的发布事件触发；向 `main` 推送代码不会启动此工作流。构建完成后，ZIP 会附加到该 Release。
+构建产物位于 `environment/artifacts/`。本 fork 的 Linux Release 从本机已验证产物发布；原 Windows/macOS 云端发布工作流仅在上游仓库执行。
 
 ## 项目结构
 

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/widgets.dart';
 import 'package:forui/forui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -38,7 +40,10 @@ class _LauncherApplicationState extends State<LauncherApplication> {
   );
   late final network =
       widget.networkFactory?.call() ??
-      NetworkController(preview: widget.preview);
+      NetworkController(
+        preview: widget.preview,
+        autoRefresh: !Platform.isLinux,
+      );
   late final appearance = ValueNotifier(widget.initialAppearance);
   late bool acrylicEnabled = widget.acrylicEnabled;
   bool? materialDark;
